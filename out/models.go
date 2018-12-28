@@ -10,9 +10,10 @@ type OutRequest struct {
 }
 
 type Params struct {
-	File          string `json:"file"`
-	PredefinedACL string `json:"predefined_acl"`
-	ContentType   string `json:"content_type"`
+	File                    string `json:"file"`
+	PredefinedACL           string `json:"predefined_acl"`
+	ContentType             string `json:"content_type"`
+	ParallelUploadThreshold int    `json:"parallel_upload_threshold"`
 }
 
 func (params Params) IsValid() (bool, string) {

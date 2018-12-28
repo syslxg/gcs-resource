@@ -38,7 +38,8 @@ func (command *OutCommand) Run(sourceDir string, request OutRequest) (OutRespons
 	objectContentType := command.objectContentType(request)
 
 	bucketName := request.Source.Bucket
-	generation, err := command.gcsClient.UploadFile(bucketName, objectPath, objectContentType, localPath, request.Params.PredefinedACL)
+	parallelUploadThreshold := command.ParallelUploadThreshold(request)
+	generation, err := command.gcsClient.UploadFile(bucketName, objectPath, objectContentType, localPath, request.Params.PredefinedACL, parallelUploadThreshold)
 	if err != nil {
 		return OutResponse{}, err
 	}
@@ -52,7 +53,6 @@ func (command *OutCommand) Run(sourceDir string, request OutRequest) (OutRespons
 		version.Generation = fmt.Sprintf("%d", generation)
 		url, _ = command.gcsClient.URL(bucketName, objectPath, generation)
 	}
-
 	return OutResponse{
 		Version:  version,
 		Metadata: command.metadata(objectPath, url),
@@ -75,6 +75,14 @@ func (command *OutCommand) localPath(request OutRequest, sourceDir string) (stri
 	}
 
 	return matches[0], nil
+}
+
+func (command *OutCommand) ParallelUploadThreshold(request OutRequest) int {
+	if request.Params.ParallelUploadThreshold == 0 {
+		return 150
+	} else {
+		return request.Params.ParallelUploadThreshold
+	}
 }
 
 func (command *OutCommand) objectPath(request OutRequest, localPath string) string {

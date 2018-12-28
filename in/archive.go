@@ -176,11 +176,11 @@ func unpackTar(sourcePath, destinationDir string) error {
 
 		_, err = io.Copy(file, tarReader)
 		file.Close()
-		
+
 		if err != nil {
 			return err
 		}
-		
+
 	}
 
 	return nil
