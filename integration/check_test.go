@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+
 	//"strconv"
 
 	. "github.com/onsi/ginkgo"
@@ -157,19 +158,19 @@ var _ = Describe("check", func() {
 				err = ioutil.WriteFile(tempFile.Name(), []byte("file-to-check-1"), 0755)
 				Expect(err).ToNot(HaveOccurred())
 
-				_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-check-1"), "", tempFile.Name(), "")
+				_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-check-1"), "", tempFile.Name(), "", -1)
 				Expect(err).ToNot(HaveOccurred())
 
 				err = ioutil.WriteFile(tempFile.Name(), []byte("file-to-check-3"), 0755)
 				Expect(err).ToNot(HaveOccurred())
 
-				_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-check-3"), "", tempFile.Name(), "")
+				_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-check-3"), "", tempFile.Name(), "", -1)
 				Expect(err).ToNot(HaveOccurred())
 
 				err = ioutil.WriteFile(tempFile.Name(), []byte("file-to-check-5"), 0755)
 				Expect(err).ToNot(HaveOccurred())
 
-				_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-check-5"), "", tempFile.Name(), "")
+				_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-check-5"), "", tempFile.Name(), "", -1)
 				Expect(err).ToNot(HaveOccurred())
 
 				err = os.Remove(tempFile.Name())
@@ -402,19 +403,19 @@ var _ = Describe("check", func() {
 				err = ioutil.WriteFile(tempFile.Name(), []byte("generation-1"), 0755)
 				Expect(err).ToNot(HaveOccurred())
 
-				generation1, err = gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "version"), "", tempFile.Name(), "")
+				generation1, err = gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "version"), "", tempFile.Name(), "", -1)
 				Expect(err).ToNot(HaveOccurred())
 
 				err = ioutil.WriteFile(tempFile.Name(), []byte("generation-2"), 0755)
 				Expect(err).ToNot(HaveOccurred())
 
-				generation2, err = gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "version"), "", tempFile.Name(), "")
+				generation2, err = gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "version"), "", tempFile.Name(), "", -1)
 				Expect(err).ToNot(HaveOccurred())
 
 				err = ioutil.WriteFile(tempFile.Name(), []byte("generation-3"), 0755)
 				Expect(err).ToNot(HaveOccurred())
 
-				generation3, err = gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "version"), "", tempFile.Name(), "")
+				generation3, err = gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "version"), "", tempFile.Name(), "", -1)
 				Expect(err).ToNot(HaveOccurred())
 
 				err = os.Remove(tempFile.Name())

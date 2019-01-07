@@ -136,19 +136,7 @@ func (gcsclient *gcsclient) DownloadFile(bucketName string, objectPath string, g
 	return nil
 }
 
-func (gcsclient *gcsclient) UploadFile(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string, parallelUploadThreshold int) (int64, error) {
-	parallelMode := false
-	isBucketVersioned, err := gcsclient.getBucketVersioning(bucketName)
-	if err != nil {
-		return 0, err
-	}
-
-	stat, err := os.Stat(localPath)
-	if err != nil {
-		return 0, err
-	}
-	fileSize := stat.Size()
-	trunkSize := int64(parallelUploadThreshold) << 20
+func (gcsclient *gcsclient) planParallelUpload(fileSize int64, trunkSize int64) (int64, int64) {
 	threads := fileSize / trunkSize
 	if fileSize%trunkSize != 0 {
 		threads++
@@ -160,11 +148,30 @@ func (gcsclient *gcsclient) UploadFile(bucketName string, objectPath string, obj
 		fmt.Fprintf(os.Stderr, "Warning: Only up to 32 threads are supported. Parameter parallel_upload_threshold is ignored. Using %d MB for each thread.\n", trunkSize>>20)
 	}
 
-	if threads > 1 {
-		parallelMode = true
-		fmt.Fprintf(os.Stderr, "parallel upload %v. using %d threads. \n", parallelMode, threads)
+	return threads, trunkSize
+}
+
+func (gcsclient *gcsclient) UploadFile(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string, parallelUploadThreshold int) (int64, error) {
+	isBucketVersioned, err := gcsclient.getBucketVersioning(bucketName)
+	if err != nil {
+		return 0, err
 	}
 
+	stat, err := os.Stat(localPath)
+	if err != nil {
+		return 0, err
+	}
+	fileSize := stat.Size()
+	parallelMode := false
+	threads := int64(1)
+	trunkSize := int64(parallelUploadThreshold) << 20
+	if parallelUploadThreshold > 0 {
+		threads, trunkSize = gcsclient.planParallelUpload(fileSize, trunkSize)
+		fmt.Fprintf(os.Stderr, "parallel upload %v. using %d threads. \n", parallelMode, threads)
+	}
+	if threads > 1 {
+		parallelMode = true
+	}
 	progress := gcsclient.newProgressBar(fileSize)
 	progress.Start()
 	defer progress.Finish()

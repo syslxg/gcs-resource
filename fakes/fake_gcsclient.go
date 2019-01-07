@@ -269,7 +269,7 @@ func (fake *FakeGCSClient) DownloadFileReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeGCSClient) UploadFile(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string) (int64, error) {
+func (fake *FakeGCSClient) UploadFile(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string, parallelUploadThreshold int) (int64, error) {
 	fake.uploadFileMutex.Lock()
 	ret, specificReturn := fake.uploadFileReturnsOnCall[len(fake.uploadFileArgsForCall)]
 	fake.uploadFileArgsForCall = append(fake.uploadFileArgsForCall, struct {
