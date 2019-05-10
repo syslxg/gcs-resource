@@ -8,10 +8,10 @@ image_resource:
 
 inputs:
   - name: gcs-resource-src
-    path: go/src/github.com/frodenas/gcs-resource
+    path: go/src/github.com/syslxg/gcs-resource
 
 outputs:
   - name: built-resource
 
 run:
-  path: go/src/github.com/frodenas/gcs-resource/ci/tasks/build.sh
+  path: go/src/github.com/syslxg/gcs-resource/ci/tasks/build.sh

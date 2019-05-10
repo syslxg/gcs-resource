@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/frodenas/gcs-resource"
-	"github.com/frodenas/gcs-resource/versions"
+	"github.com/syslxg/gcs-resource"
+	"github.com/syslxg/gcs-resource/versions"
 )
 
 type InCommand struct {

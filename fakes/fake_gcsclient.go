@@ -4,7 +4,7 @@ package fakes
 import (
 	"sync"
 
-	"github.com/frodenas/gcs-resource"
+	"github.com/syslxg/gcs-resource"
 	storage "google.golang.org/api/storage/v1"
 )
 
@@ -270,7 +270,7 @@ func (fake *FakeGCSClient) DownloadFileReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeGCSClient) UploadFile(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string, cacheControl string) (int64, error) {
+func (fake *FakeGCSClient) UploadFile(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string, cacheControl string, parallelUploadThreshold int) (int64, error) {
 	fake.uploadFileMutex.Lock()
 	ret, specificReturn := fake.uploadFileReturnsOnCall[len(fake.uploadFileArgsForCall)]
 	fake.uploadFileArgsForCall = append(fake.uploadFileArgsForCall, struct {

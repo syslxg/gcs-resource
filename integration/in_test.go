@@ -16,9 +16,9 @@ import (
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 
-	"github.com/frodenas/gcs-resource"
-	"github.com/frodenas/gcs-resource/in"
 	"github.com/nu7hatch/gouuid"
+	"github.com/syslxg/gcs-resource"
+	"github.com/syslxg/gcs-resource/in"
 )
 
 var _ = Describe("in", func() {
@@ -119,19 +119,19 @@ var _ = Describe("in", func() {
 			err = ioutil.WriteFile(tempFile.Name(), []byte("file-to-download-1"), 0755)
 			Expect(err).ToNot(HaveOccurred())
 
-			_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-download-1"), "", tempFile.Name(), "", "")
+			_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-download-1"), "", tempFile.Name(), "", "", -1)
 			Expect(err).ToNot(HaveOccurred())
 
 			err = ioutil.WriteFile(tempFile.Name(), []byte("file-to-download-2"), 0755)
 			Expect(err).ToNot(HaveOccurred())
 
-			_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-download-2"), "", tempFile.Name(), "", "")
+			_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-download-2"), "", tempFile.Name(), "", "", -1)
 			Expect(err).ToNot(HaveOccurred())
 
 			err = ioutil.WriteFile(tempFile.Name(), []byte("file-to-download-3"), 0755)
 			Expect(err).ToNot(HaveOccurred())
 
-			_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-download-3"), "", tempFile.Name(), "", "")
+			_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-download-3"), "", tempFile.Name(), "", "", -1)
 			Expect(err).ToNot(HaveOccurred())
 
 			err = os.Remove(tempFile.Name())
@@ -224,7 +224,7 @@ var _ = Describe("in", func() {
 					Expect(err).NotTo(HaveOccurred())
 					Eventually(session).Should(gexec.Exit(0))
 
-					_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-download.tgz"), "", tempTarballPath, "", "")
+					_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-download.tgz"), "", tempTarballPath, "", "", -1)
 					Expect(err).ToNot(HaveOccurred())
 
 					err = os.RemoveAll(tempDir)
@@ -420,19 +420,19 @@ var _ = Describe("in", func() {
 					err = ioutil.WriteFile(tempFile.Name(), []byte("generation-1"), 0755)
 					Expect(err).ToNot(HaveOccurred())
 
-					_, err = gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "version"), "", tempFile.Name(), "", "")
+					_, err = gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "version"), "", tempFile.Name(), "", "", -1)
 					Expect(err).ToNot(HaveOccurred())
 
 					err = ioutil.WriteFile(tempFile.Name(), []byte("generation-2"), 0755)
 					Expect(err).ToNot(HaveOccurred())
 
-					generation2, err = gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "version"), "", tempFile.Name(), "", "")
+					generation2, err = gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "version"), "", tempFile.Name(), "", "", -1)
 					Expect(err).ToNot(HaveOccurred())
 
 					err = ioutil.WriteFile(tempFile.Name(), []byte("generation-3"), 0755)
 					Expect(err).ToNot(HaveOccurred())
 
-					_, err = gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "version"), "", tempFile.Name(), "", "")
+					_, err = gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "version"), "", tempFile.Name(), "", "", -1)
 					Expect(err).ToNot(HaveOccurred())
 
 					err = os.Remove(tempFile.Name())
@@ -523,7 +523,7 @@ var _ = Describe("in", func() {
 					Expect(err).NotTo(HaveOccurred())
 					Eventually(session).Should(gexec.Exit(0))
 
-					generation, err = gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "version.tgz"), "", tempTarballPath, "", "")
+					generation, err = gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "version.tgz"), "", tempTarballPath, "", "", -1)
 					Expect(err).ToNot(HaveOccurred())
 
 					err = os.RemoveAll(tempDir)

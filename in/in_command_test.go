@@ -9,10 +9,10 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/frodenas/gcs-resource"
-	"github.com/frodenas/gcs-resource/fakes"
+	"github.com/syslxg/gcs-resource"
+	"github.com/syslxg/gcs-resource/fakes"
 
-	. "github.com/frodenas/gcs-resource/in"
+	. "github.com/syslxg/gcs-resource/in"
 )
 
 var _ = Describe("In Command", func() {

@@ -5,10 +5,10 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/frodenas/gcs-resource"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"github.com/syslxg/gcs-resource"
 
 	"testing"
 )
@@ -33,11 +33,11 @@ type suiteData struct {
 }
 
 var _ = SynchronizedBeforeSuite(func() []byte {
-	cp, err := gexec.Build("github.com/frodenas/gcs-resource/cmd/check")
+	cp, err := gexec.Build("github.com/syslxg/gcs-resource/cmd/check")
 	Expect(err).ToNot(HaveOccurred())
-	ip, err := gexec.Build("github.com/frodenas/gcs-resource/cmd/in")
+	ip, err := gexec.Build("github.com/syslxg/gcs-resource/cmd/in")
 	Expect(err).ToNot(HaveOccurred())
-	op, err := gexec.Build("github.com/frodenas/gcs-resource/cmd/out")
+	op, err := gexec.Build("github.com/syslxg/gcs-resource/cmd/out")
 	Expect(err).ToNot(HaveOccurred())
 
 	data, err := json.Marshal(suiteData{

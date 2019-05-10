@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/frodenas/gcs-resource"
+	gcsresource "github.com/syslxg/gcs-resource"
 )
 
 type OutCommand struct {
@@ -38,7 +38,8 @@ func (command *OutCommand) Run(sourceDir string, request OutRequest) (OutRespons
 	objectContentType := command.objectContentType(request)
 
 	bucketName := request.Source.Bucket
-	generation, err := command.gcsClient.UploadFile(bucketName, objectPath, objectContentType, localPath, request.Params.PredefinedACL, request.Params.CacheControl)
+	parallelUploadThreshold := command.ParallelUploadThreshold(request)
+	generation, err := command.gcsClient.UploadFile(bucketName, objectPath, objectContentType, localPath, request.Params.PredefinedACL, request.Params.CacheControl, parallelUploadThreshold)
 	if err != nil {
 		return OutResponse{}, err
 	}
@@ -75,6 +76,14 @@ func (command *OutCommand) localPath(request OutRequest, sourceDir string) (stri
 	}
 
 	return matches[0], nil
+}
+
+func (command *OutCommand) ParallelUploadThreshold(request OutRequest) int {
+	if request.Params.ParallelUploadThreshold == 0 {
+		return 150
+	} else {
+		return request.Params.ParallelUploadThreshold
+	}
 }
 
 func (command *OutCommand) objectPath(request OutRequest, localPath string) string {

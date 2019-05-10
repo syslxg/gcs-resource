@@ -1,6 +1,6 @@
 package check
 
-import "github.com/frodenas/gcs-resource"
+import "github.com/syslxg/gcs-resource"
 
 type CheckRequest struct {
 	Source  gcsresource.Source  `json:"source"`

@@ -8,10 +8,10 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/frodenas/gcs-resource"
-	"github.com/frodenas/gcs-resource/fakes"
+	"github.com/syslxg/gcs-resource"
+	"github.com/syslxg/gcs-resource/fakes"
 
-	. "github.com/frodenas/gcs-resource/check"
+	. "github.com/syslxg/gcs-resource/check"
 )
 
 var _ = Describe("Check Command", func() {

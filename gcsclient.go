@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 
 	"golang.org/x/oauth2"
 	oauthgoogle "golang.org/x/oauth2/google"
@@ -19,7 +20,7 @@ type GCSClient interface {
 	BucketObjects(bucketName string, prefix string) ([]string, error)
 	ObjectGenerations(bucketName string, objectPath string) ([]int64, error)
 	DownloadFile(bucketName string, objectPath string, generation int64, localPath string) error
-	UploadFile(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string, cacheControl string) (int64, error)
+	UploadFile(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string, cacheControl string, parallelUploadThreshold int) (int64, error)
 	URL(bucketName string, objectPath string, generation int64) (string, error)
 	DeleteObject(bucketName string, objectPath string, generation int64) error
 	GetBucketObjectInfo(bucketName, objectPath string) (*storage.Object, error)
@@ -135,7 +136,7 @@ func (gcsclient *gcsclient) DownloadFile(bucketName string, objectPath string, g
 	return nil
 }
 
-func (gcsclient *gcsclient) UploadFile(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string, cacheControl string) (int64, error) {
+func (gcsclient *gcsclient) UploadFile(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string, cacheControl string, parallelUploadThreshold int) (int64, error) {
 	isBucketVersioned, err := gcsclient.getBucketVersioning(bucketName)
 	if err != nil {
 		return 0, err
@@ -145,43 +146,131 @@ func (gcsclient *gcsclient) UploadFile(bucketName string, objectPath string, obj
 	if err != nil {
 		return 0, err
 	}
-
-	localFile, err := os.Open(localPath)
-	if err != nil {
-		return 0, err
+	fileSize := stat.Size()
+	parallelMode := false
+	threads := int64(1)
+	trunkSize := int64(parallelUploadThreshold) << 20
+	if parallelUploadThreshold > 0 {
+		threads, trunkSize = gcsclient.planParallelUpload(fileSize, trunkSize)
+		fmt.Fprintf(os.Stderr, "parallel upload %v. using %d threads. \n", parallelMode, threads)
 	}
-	defer localFile.Close()
-
-	progress := gcsclient.newProgressBar(stat.Size())
+	if threads > 1 {
+		parallelMode = true
+	}
+	progress := gcsclient.newProgressBar(fileSize)
 	progress.Start()
 	defer progress.Finish()
-
-	object := &storage.Object{
-		Name:         objectPath,
-		ContentType:  objectContentType,
-		CacheControl: cacheControl,
-	}
-
 	var mediaOptions []googleapi.MediaOption
 	if objectContentType != "" {
 		mediaOptions = append(mediaOptions, googleapi.ContentType(objectContentType))
 	}
 
-	insertCall := gcsclient.storageService.Objects.Insert(bucketName, object).Media(progress.NewProxyReader(localFile), mediaOptions...)
-	if predefinedACL != "" {
-		insertCall = insertCall.PredefinedAcl(predefinedACL)
+	if parallelMode {
+		readers := make([]io.Reader, threads)
+		sourceObjects := make([]*storage.ComposeRequestSourceObjects, threads)
+		errChannel := make(chan error)
+		for i := int64(0); i < threads; i++ {
+			localFile, err := os.Open(localPath)
+			//TODO: close the files
+			if err != nil {
+				return 0, err
+			}
+			localFile.Seek(trunkSize*i, 0)
+			if i == threads-1 {
+				readers[i] = localFile
+			} else {
+				readers[i] = io.LimitReader(localFile, trunkSize)
+			}
+			partName := objectPath + ".part" + strconv.Itoa(int(i))
+			object := &storage.Object{
+				Name:         partName,
+				ContentType:  objectContentType,
+				CacheControl: cacheControl,
+			}
+			sourceObjects[i] = &storage.ComposeRequestSourceObjects{Name: partName}
+			insertCall := gcsclient.storageService.Objects.Insert(bucketName, object).Media(progress.NewProxyReader(readers[i]), mediaOptions...)
+			if predefinedACL != "" {
+				insertCall = insertCall.PredefinedAcl(predefinedACL)
+			}
+
+			go func() {
+				_, err = insertCall.Do()
+				errChannel <- err
+			}()
+
+		}
+
+		for i := int64(0); i < threads; i++ {
+			err = <-errChannel
+			if err != nil {
+				return 0, err
+			}
+		}
+
+		progress.Finish()
+		fmt.Fprintf(os.Stderr, "\n\nSending compose request to merge the files...\n")
+		composeReqest := &storage.ComposeRequest{
+			SourceObjects: sourceObjects,
+		}
+		composeCall := gcsclient.storageService.Objects.Compose(bucketName, objectPath, composeReqest)
+		_, err = composeCall.Do()
+		if err != nil {
+			return 0, err
+		}
+
+		fmt.Fprintf(os.Stderr, "Cleanup...\n")
+		for i := int64(0); i < threads; i++ {
+			partName := objectPath + ".part" + strconv.Itoa(int(i))
+			err = gcsclient.storageService.Objects.Delete(bucketName, partName).Do()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: Failed to delete file %s: %v\n", partName, err)
+			}
+		}
+		return 0, nil
+	} else { //parallelMode  disabled
+		localFile, err := os.Open(localPath)
+		if err != nil {
+			return 0, err
+		}
+		defer localFile.Close()
+
+		object := &storage.Object{
+			Name:         objectPath,
+			ContentType:  objectContentType,
+			CacheControl: cacheControl,
+		}
+
+		insertCall := gcsclient.storageService.Objects.Insert(bucketName, object).Media(progress.NewProxyReader(localFile), mediaOptions...)
+		if predefinedACL != "" {
+			insertCall = insertCall.PredefinedAcl(predefinedACL)
+		}
+
+		uploadedObject, err := insertCall.Do()
+		if err != nil {
+			return 0, err
+		}
+
+		if isBucketVersioned {
+			return uploadedObject.Generation, nil
+		}
+
+		return 0, nil
+	}
+}
+
+func (gcsclient *gcsclient) planParallelUpload(fileSize int64, trunkSize int64) (int64, int64) {
+	threads := fileSize / trunkSize
+	if fileSize%trunkSize != 0 {
+		threads++
 	}
 
-	uploadedObject, err := insertCall.Do()
-	if err != nil {
-		return 0, err
+	if threads > 32 {
+		threads = 32
+		trunkSize = fileSize / 32
+		fmt.Fprintf(os.Stderr, "Warning: Only up to 32 threads are supported. Parameter parallel_upload_threshold is ignored. Using %d MB for each thread.\n", trunkSize>>20)
 	}
 
-	if isBucketVersioned {
-		return uploadedObject.Generation, nil
-	}
-
-	return 0, nil
+	return threads, trunkSize
 }
 
 func (gcsclient *gcsclient) URL(bucketName string, objectPath string, generation int64) (string, error) {

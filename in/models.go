@@ -1,7 +1,7 @@
 package in
 
 import (
-	"github.com/frodenas/gcs-resource"
+	"github.com/syslxg/gcs-resource"
 )
 
 type InRequest struct {

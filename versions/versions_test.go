@@ -4,7 +4,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/frodenas/gcs-resource/versions"
+	"github.com/syslxg/gcs-resource/versions"
 )
 
 type MatchFunc func(paths []string, pattern string) ([]string, error)
