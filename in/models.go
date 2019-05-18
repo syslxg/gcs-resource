@@ -1,8 +1,6 @@
 package in
 
-import (
-	"github.com/syslxg/gcs-resource"
-)
+import gcsresource "github.com/syslxg/gcs-resource"
 
 type InRequest struct {
 	Source  gcsresource.Source  `json:"source"`
@@ -11,7 +9,8 @@ type InRequest struct {
 }
 
 type Params struct {
-	Unpack bool `json:"unpack"`
+	SkipDownload bool `json:"skip_download"`
+	Unpack       bool `json:"unpack"`
 }
 
 type InResponse struct {
