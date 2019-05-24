@@ -23,3 +23,16 @@ resource_types:
     source:
       repository: pivotalcfreleng/gcs-resource
 ```
+
+## DEV
+
+```
+  #test
+  make
+  make integration-tests
+
+  #build
+  fly -t releng execute -c ci/tasks/build.yml -i gcs-resource-src=. -o built-resource=.
+  docker build -t pivotalcfreleng/gcs-resource .
+  docker push pivotalcfreleng/gcs-resource
+```
