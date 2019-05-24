@@ -152,10 +152,10 @@ func (gcsclient *gcsclient) UploadFile(bucketName string, objectPath string, obj
 	trunkSize := int64(parallelUploadThreshold) << 20
 	if parallelUploadThreshold > 0 {
 		threads, trunkSize = gcsclient.planParallelUpload(fileSize, trunkSize)
-		fmt.Fprintf(os.Stderr, "parallel upload %v. using %d threads. \n", parallelMode, threads)
 	}
 	if threads > 1 {
 		parallelMode = true
+		fmt.Fprintf(os.Stderr, "Using %d threads. \n", threads)
 	}
 	progress := gcsclient.newProgressBar(fileSize)
 	progress.Start()
