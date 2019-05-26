@@ -208,7 +208,7 @@ var _ = Describe("in", func() {
 				})
 			})
 
-			Context("when path exists and 'skip_download' is specified", func() {
+			Context("when path exists and 'skip_download' is specified as a source param", func() {
 				BeforeEach(func() {
 					tempDir, err := ioutil.TempDir("", directoryPrefix)
 					Expect(err).ToNot(HaveOccurred())
@@ -224,7 +224,7 @@ var _ = Describe("in", func() {
 					Expect(err).NotTo(HaveOccurred())
 					Eventually(session).Should(gexec.Exit(0))
 
-					_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-download.tgz"), "", tempTarballPath, "", "")
+					_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-download.tgz"), "", tempTarballPath, "", "", -1)
 					Expect(err).ToNot(HaveOccurred())
 
 					err = os.RemoveAll(tempDir)
@@ -232,15 +232,13 @@ var _ = Describe("in", func() {
 
 					inRequest = in.InRequest{
 						Source: gcsresource.Source{
-							JSONKey: jsonKey,
-							Bucket:  bucketName,
-							Regexp:  filepath.Join(directoryPrefix, "file-to-download-(.*)"),
+							JSONKey:      jsonKey,
+							Bucket:       bucketName,
+							Regexp:       filepath.Join(directoryPrefix, "file-to-download-(.*)"),
+							SkipDownload: true,
 						},
 						Version: gcsresource.Version{
 							Path: filepath.Join(directoryPrefix, "file-to-download.tgz"),
-						},
-						Params: in.Params{
-							SkipDownload: true,
 						},
 					}
 
@@ -581,7 +579,7 @@ var _ = Describe("in", func() {
 				})
 			})
 
-			Context("when the versioned file exists and 'skip_download' is specified", func() {
+			Context("when the versioned file exists and 'skip_download' is specified as a get param", func() {
 				var (
 					generation int64
 				)
@@ -601,7 +599,7 @@ var _ = Describe("in", func() {
 					Expect(err).NotTo(HaveOccurred())
 					Eventually(session).Should(gexec.Exit(0))
 
-					generation, err = gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "version.tgz"), "", tempTarballPath, "", "")
+					generation, err = gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "version.tgz"), "", tempTarballPath, "", "", -1)
 					Expect(err).ToNot(HaveOccurred())
 
 					err = os.RemoveAll(tempDir)
@@ -617,7 +615,7 @@ var _ = Describe("in", func() {
 							Generation: fmt.Sprintf("%d", generation),
 						},
 						Params: in.Params{
-							SkipDownload: true,
+							SkipDownload: "true",
 						},
 					}
 
